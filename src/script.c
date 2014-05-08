@@ -74,14 +74,20 @@ void script_init(lua_State *L, char *script, int argc, char **argv) {
     lua_call(L, 1, 0);
 }
 
-void script_request(lua_State *L, char **buf, size_t *len) {
+void script_request(lua_State *L, uint64_t connection_id, char **buf, size_t *len) {
+    lua_pushinteger(L, connection_id);
+    lua_setglobal(L, "connection_id");
+
     lua_getglobal(L, "request");
     lua_call(L, 0, 1);
     *buf = (char *) lua_tolstring(L, 1, len);
     lua_pop(L, 1);
 }
 
-void script_response(lua_State *L, int status, buffer *headers, buffer *body) {
+void script_response(lua_State *L, uint64_t connection_id, int status, buffer *headers, buffer *body) {
+    lua_pushinteger(L, connection_id);
+    lua_setglobal(L, "connection_id");
+
     lua_getglobal(L, "response");
     lua_pushinteger(L, status);
     lua_newtable(L);
@@ -192,7 +198,7 @@ size_t script_verify_request(lua_State *L) {
     char *request;
     size_t len, count = 0;
 
-    script_request(L, &request, &len);
+    script_request(L, 0, &request, &len);
     http_parser_init(&parser, HTTP_REQUEST);
     parser.data = &count;
 

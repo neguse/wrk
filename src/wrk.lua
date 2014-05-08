@@ -53,5 +53,6 @@ init     = wrk.init
 request  = wrk.request
 response = nil
 done     = nil
+connection_id = nil
 
 return wrk

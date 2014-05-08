@@ -239,12 +239,13 @@ void *thread_main(void *arg) {
     size_t length = 0;
 
     if (!cfg.dynamic) {
-        script_request(thread->L, &request, &length);
+        script_request(thread->L, 0, &request, &length);
     }
 
     connection *c = thread->cs;
 
     for (uint64_t i = 0; i < thread->connections; i++, c++) {
+        c->id = i + 1;
         c->thread = thread;
         c->ssl     = cfg.ctx ? SSL_new(cfg.ctx) : NULL;
         c->request = request;
@@ -413,7 +414,7 @@ static int response_complete(http_parser *parser) {
 
     if (c->headers.buffer) {
         *c->headers.cursor++ = '\0';
-        script_response(thread->L, status, &c->headers, &c->body);
+        script_response(thread->L, c->id, status, &c->headers, &c->body);
         c->state = FIELD;
     }
 
@@ -466,7 +467,7 @@ static void socket_writeable(aeEventLoop *loop, int fd, void *data, int mask) {
     thread *thread = c->thread;
 
     if (!c->written && cfg.dynamic) {
-        script_request(thread->L, &c->request, &c->length);
+        script_request(thread->L, c->id, &c->request, &c->length);
     }
 
     char  *buf = c->request + c->written;

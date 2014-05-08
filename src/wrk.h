@@ -42,6 +42,7 @@ typedef struct {
 } thread;
 
 typedef struct connection {
+    uint64_t id;
     thread *thread;
     http_parser parser;
     enum {
